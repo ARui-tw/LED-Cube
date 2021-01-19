@@ -1,6 +1,8 @@
 module Pong (
     input clk,
     input rst,
+    input robot_A,
+    input robot_B,
     inout wire PS2_DATA,
 	inout wire PS2_CLK,
     output reg [63:0] layer1,
@@ -10,7 +12,10 @@ module Pong (
     output reg [63:0] layer5,
     output reg [63:0] layer6,
     output reg [63:0] layer7,
-    output reg [63:0] layer8
+    output reg [63:0] layer8,
+    output reg [3:0] A_score,
+    output reg [3:0] B_score,
+    output reg finish
 );
     reg cube[7:0][7:0][7:0]; // x y z
 
@@ -40,9 +45,7 @@ module Pong (
     reg [2:0] delta_z;
     reg [2:0] next_delta_z;
 
-    reg [3:0] A_score;
     reg [3:0] next_A_score;
-    reg [3:0] B_score;
     reg [3:0] next_B_score;
 
     reg Pause;
@@ -88,7 +91,7 @@ module Pong (
     clockDivider #(.n(25)) Clk26(clk, clk_div_26);
     clockDivider #(.n(24)) Clk25(clk, clk_div_25);
 
-    assign clk_div = (A_score > 7 || B_score > 7)? clk_div_25 : clk_div_26;
+    assign clk_div = (A_score > 4'd7 || B_score > 4'd7)? clk_div_25 : clk_div_26;
 
     always @(posedge clk_div, posedge rst) begin
         if (rst) begin
@@ -130,6 +133,7 @@ module Pong (
             A_pos_z <= 3'd4;
             B_pos_x <= 3'd4;
             B_pos_z <= 3'd4;
+            finish <= 0;
             layer1 <= 64'b0;
             layer2 <= 64'b0;
             layer3 <= 64'b0;
@@ -214,6 +218,13 @@ module Pong (
                 Pause <= Next_Pause;
             end
 
+            if ((A_score >= 4'd11 || B_score >= 4'd11) && finish == 1'b0)begin
+                Pause <= 1'b1;
+                finish <= 1'b1;
+            end
+            else
+                finish <= 1'b0;
+
             if (state == Play) begin
                 cube[0][7][0] <= 1'b0; cube[1][7][0] <= 1'b0; cube[2][7][0] <= 1'b0; cube[3][7][0] <= 1'b0; cube[4][7][0] <= 1'b0; cube[5][7][0] <= 1'b0; cube[6][7][0] <= 1'b0; cube[7][7][0] <= 1'b0; 
                 cube[0][7][1] <= 1'b0; cube[1][7][1] <= 1'b0; cube[2][7][1] <= 1'b0; cube[3][7][1] <= 1'b0; cube[4][7][1] <= 1'b0; cube[5][7][1] <= 1'b0; cube[6][7][1] <= 1'b0; cube[7][7][1] <= 1'b0;
@@ -292,8 +303,8 @@ module Pong (
             else begin
                 case (A_score)
                     4'd0: begin
-                        cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b1; cube[4][0][0] <= 1'b1; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
-                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b0; cube[4][0][1] <= 1'b0; cube[5][0][1] <= 1'b1; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
+                        cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
+                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
                         cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b1; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b1; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
                         cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b1; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b1; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
                         cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b0; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
@@ -302,9 +313,9 @@ module Pong (
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b0; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b0; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
                     end
                     4'd1: begin
-                        cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b1; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
-                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
-                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b1; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
+                        cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
+                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b0; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
+                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b1; cube[5][0][2] <= 1'b1; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
                         cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b1; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
                         cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
                         cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b1; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
@@ -315,28 +326,28 @@ module Pong (
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
                         cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b1; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
                         cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b1; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b1; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b1; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
+                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b1; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
                         cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
-                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b1; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
-                        cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b1; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
+                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b1; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
+                        cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b1; cube[7][0][6] <= 1'b0;
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b1; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b1; cube[6][0][7] <= 1'b1; cube[7][0][7] <= 1'b0;
                     end
                     4'd3: begin
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
                         cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b1; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
                         cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b1; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b1; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b1; cube[7][0][3] <= 1'b0; 
+                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b1; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
                         cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
-                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b1; cube[7][0][5] <= 1'b0;
+                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b1; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
                         cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b1; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b1; cube[7][0][6] <= 1'b0;
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b0; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b1; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
                     end
                     4'd4: begin
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
-                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b0; cube[4][0][1] <= 1'b0; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
-                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b1; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b1; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
-                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
+                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b0; cube[4][0][1] <= 1'b0; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b1; cube[7][0][1] <= 1'b0;
+                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b1; cube[7][0][2] <= 1'b0; 
+                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b1; cube[7][0][3] <= 1'b0; 
+                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b1; cube[7][0][4] <= 1'b0; 
                         cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b1; cube[3][0][5] <= 1'b1; cube[4][0][5] <= 1'b1; cube[5][0][5] <= 1'b1; cube[6][0][5] <= 1'b1; cube[7][0][5] <= 1'b0;
                         cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b1; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b0; cube[3][0][7] <= 1'b0; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b0; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
@@ -344,19 +355,19 @@ module Pong (
                     4'd5: begin
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
                         cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b1; cube[6][0][1] <= 1'b1; cube[7][0][1] <= 1'b0;
-                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b1; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b1; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
-                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
-                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b1; cube[7][0][5] <= 1'b0;
-                        cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b1; cube[7][0][6] <= 1'b0;
-                        cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b1; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b1; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
+                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b1; cube[7][0][2] <= 1'b0; 
+                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b1; cube[7][0][3] <= 1'b0; 
+                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b1; cube[7][0][4] <= 1'b0; 
+                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b1; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
+                        cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b1; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
+                        cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b0; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b1; cube[6][0][7] <= 1'b1; cube[7][0][7] <= 1'b0;
                     end
                     4'd6: begin
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
                         cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
                         cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b1; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b1; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b1; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
-                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b1; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
+                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b1; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
+                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
                         cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b1; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b1; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
                         cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b1; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b1; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b1; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b0; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
@@ -364,8 +375,8 @@ module Pong (
                     4'd7: begin
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b0; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b0; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
                         cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b1; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b1; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
-                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b1; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b1; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
+                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b1; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
+                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b1; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
                         cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b0; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
                         cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b1; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
                         cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b1; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
@@ -386,19 +397,18 @@ module Pong (
                         cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
                         cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b1; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b1; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
                         cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b1; cube[2][0][3] <= 1'b0; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b0; cube[5][0][3] <= 1'b1; cube[6][0][3] <= 1'b0; cube[7][0][3] <= 1'b0; 
-                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
-                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b1; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
+                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b1; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
+                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b1; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
                         cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b1; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b1; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b1; cube[3][0][7] <= 1'b1; cube[4][0][7] <= 1'b1; cube[5][0][7] <= 1'b0; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
                     end
                     4'd10: begin
                         cube[0][0][0] <= 1'b0; cube[1][0][0] <= 1'b0; cube[2][0][0] <= 1'b1; cube[3][0][0] <= 1'b0; cube[4][0][0] <= 1'b0; cube[5][0][0] <= 1'b1; cube[6][0][0] <= 1'b0; cube[7][0][0] <= 1'b0; 
-                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b0; cube[2][0][1] <= 1'b1; cube[3][0][1] <= 1'b0; cube[4][0][1] <= 1'b1; cube[5][0][1] <= 1'b0; cube[6][0][1] <= 1'b1; cube[7][0][1] <= 1'b0;
-                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b0; cube[2][0][2] <= 1'b1; cube[3][0][2] <= 1'b0; cube[4][0][2] <= 1'b1; cube[5][0][2] <= 1'b0; cube[6][0][2] <= 1'b1; cube[7][0][2] <= 1'b0; 
-                        cube[0][0][3] <= 1'b0; cube[1][0][3] <= 1'b0; cube[2][0][3] <= 1'b1; cube[3][0][3] <= 1'b0; cube[4][0][3] <= 1'b1; cube[5][0][3] <= 1'b0; cube[6][0][3] <= 1'b1; cube[7][0][3] <= 1'b0; 
-                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b0; cube[2][0][4] <= 1'b1; cube[3][0][4] <= 1'b0; cube[4][0][4] <= 1'b1; cube[5][0][4] <= 1'b0; cube[6][0][4] <= 1'b1; cube[7][0][4] <= 1'b0; 
-                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b0; cube[2][0][5] <= 1'b1; cube[3][0][5] <= 1'b0; cube[4][0][5] <= 1'b1; cube[5][0][5] <= 1'b0; cube[6][0][5] <= 1'b1; cube[7][0][5] <= 1'b0;
-                        cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b0; cube[2][0][6] <= 1'b1; cube[3][0][6] <= 1'b0; cube[4][0][6] <= 1'b1; cube[5][0][6] <= 1'b0; cube[6][0][6] <= 1'b1; cube[7][0][6] <= 1'b0;
+                        cube[0][0][1] <= 1'b0; cube[1][0][1] <= 1'b1; cube[2][0][1] <= 1'b0; cube[3][0][1] <= 1'b1; cube[4][0][1] <= 1'b0; cube[5][0][1] <= 1'b1; cube[6][0][1] <= 1'b0; cube[7][0][1] <= 1'b0;
+                        cube[0][0][2] <= 1'b0; cube[1][0][2] <= 1'b1; cube[2][0][2] <= 1'b0; cube[3][0][2] <= 1'b1; cube[4][0][2] <= 1'b0; cube[5][0][2] <= 1'b1; cube[6][0][2] <= 1'b0; cube[7][0][2] <= 1'b0; 
+                        cube[0][0][4] <= 1'b0; cube[1][0][4] <= 1'b1; cube[2][0][4] <= 1'b0; cube[3][0][4] <= 1'b1; cube[4][0][4] <= 1'b0; cube[5][0][4] <= 1'b1; cube[6][0][4] <= 1'b0; cube[7][0][4] <= 1'b0; 
+                        cube[0][0][5] <= 1'b0; cube[1][0][5] <= 1'b1; cube[2][0][5] <= 1'b0; cube[3][0][5] <= 1'b1; cube[4][0][5] <= 1'b0; cube[5][0][5] <= 1'b1; cube[6][0][5] <= 1'b0; cube[7][0][5] <= 1'b0;
+                        cube[0][0][6] <= 1'b0; cube[1][0][6] <= 1'b1; cube[2][0][6] <= 1'b0; cube[3][0][6] <= 1'b1; cube[4][0][6] <= 1'b0; cube[5][0][6] <= 1'b1; cube[6][0][6] <= 1'b0; cube[7][0][6] <= 1'b0;
                         cube[0][0][7] <= 1'b0; cube[1][0][7] <= 1'b0; cube[2][0][7] <= 1'b1; cube[3][0][7] <= 1'b0; cube[4][0][7] <= 1'b0; cube[5][0][7] <= 1'b1; cube[6][0][7] <= 1'b0; cube[7][0][7] <= 1'b0;
                     end
                     default: begin
@@ -415,8 +425,8 @@ module Pong (
 
                 case (B_score)
                     4'd0: begin
-                        cube[0][7][0] <= 1'b0; cube[1][7][0] <= 1'b0; cube[2][7][0] <= 1'b0; cube[3][7][0] <= 1'b1; cube[4][7][0] <= 1'b1; cube[5][7][0] <= 1'b0; cube[6][7][0] <= 1'b0; cube[7][7][0] <= 1'b0; 
-                        cube[0][7][1] <= 1'b0; cube[1][7][1] <= 1'b0; cube[2][7][1] <= 1'b1; cube[3][7][1] <= 1'b0; cube[4][7][1] <= 1'b0; cube[5][7][1] <= 1'b1; cube[6][7][1] <= 1'b0; cube[7][7][1] <= 1'b0;
+                        cube[0][7][0] <= 1'b0; cube[1][7][0] <= 1'b0; cube[2][7][0] <= 1'b0; cube[3][7][0] <= 1'b0; cube[4][7][0] <= 1'b0; cube[5][7][0] <= 1'b0; cube[6][7][0] <= 1'b0; cube[7][7][0] <= 1'b0; 
+                        cube[0][7][1] <= 1'b0; cube[1][7][1] <= 1'b0; cube[2][7][1] <= 1'b0; cube[3][7][1] <= 1'b1; cube[4][7][1] <= 1'b1; cube[5][7][1] <= 1'b0; cube[6][7][1] <= 1'b0; cube[7][7][1] <= 1'b0;
                         cube[0][7][2] <= 1'b0; cube[1][7][2] <= 1'b0; cube[2][7][2] <= 1'b1; cube[3][7][2] <= 1'b0; cube[4][7][2] <= 1'b0; cube[5][7][2] <= 1'b1; cube[6][7][2] <= 1'b0; cube[7][7][2] <= 1'b0; 
                         cube[0][7][3] <= 1'b0; cube[1][7][3] <= 1'b0; cube[2][7][3] <= 1'b1; cube[3][7][3] <= 1'b0; cube[4][7][3] <= 1'b0; cube[5][7][3] <= 1'b1; cube[6][7][3] <= 1'b0; cube[7][7][3] <= 1'b0; 
                         cube[0][7][4] <= 1'b0; cube[1][7][4] <= 1'b0; cube[2][7][4] <= 1'b1; cube[3][7][4] <= 1'b0; cube[4][7][4] <= 1'b0; cube[5][7][4] <= 1'b1; cube[6][7][4] <= 1'b0; cube[7][7][4] <= 1'b0; 
@@ -425,9 +435,9 @@ module Pong (
                         cube[0][7][7] <= 1'b0; cube[1][7][7] <= 1'b0; cube[2][7][7] <= 1'b0; cube[3][7][7] <= 1'b1; cube[4][7][7] <= 1'b1; cube[5][7][7] <= 1'b0; cube[6][7][7] <= 1'b0; cube[7][7][7] <= 1'b0;
                     end
                     4'd1: begin
-                        cube[0][7][0] <= 1'b0; cube[1][7][0] <= 1'b0; cube[2][7][0] <= 1'b0; cube[3][7][0] <= 1'b0; cube[4][7][0] <= 1'b1; cube[5][7][0] <= 1'b0; cube[6][7][0] <= 1'b0; cube[7][7][0] <= 1'b0; 
-                        cube[0][7][1] <= 1'b0; cube[1][7][1] <= 1'b0; cube[2][7][1] <= 1'b0; cube[3][7][1] <= 1'b1; cube[4][7][1] <= 1'b1; cube[5][7][1] <= 1'b0; cube[6][7][1] <= 1'b0; cube[7][7][1] <= 1'b0;
-                        cube[0][7][2] <= 1'b0; cube[1][7][2] <= 1'b0; cube[2][7][2] <= 1'b0; cube[3][7][2] <= 1'b0; cube[4][7][2] <= 1'b1; cube[5][7][2] <= 1'b0; cube[6][7][2] <= 1'b0; cube[7][7][2] <= 1'b0; 
+                        cube[0][7][0] <= 1'b0; cube[1][7][0] <= 1'b0; cube[2][7][0] <= 1'b0; cube[3][7][0] <= 1'b0; cube[4][7][0] <= 1'b0; cube[5][7][0] <= 1'b0; cube[6][7][0] <= 1'b0; cube[7][7][0] <= 1'b0; 
+                        cube[0][7][1] <= 1'b0; cube[1][7][1] <= 1'b0; cube[2][7][1] <= 1'b0; cube[3][7][1] <= 1'b0; cube[4][7][1] <= 1'b1; cube[5][7][1] <= 1'b0; cube[6][7][1] <= 1'b0; cube[7][7][1] <= 1'b0;
+                        cube[0][7][2] <= 1'b0; cube[1][7][2] <= 1'b0; cube[2][7][2] <= 1'b0; cube[3][7][2] <= 1'b1; cube[4][7][2] <= 1'b1; cube[5][7][2] <= 1'b0; cube[6][7][2] <= 1'b0; cube[7][7][2] <= 1'b0; 
                         cube[0][7][3] <= 1'b0; cube[1][7][3] <= 1'b0; cube[2][7][3] <= 1'b0; cube[3][7][3] <= 1'b0; cube[4][7][3] <= 1'b1; cube[5][7][3] <= 1'b0; cube[6][7][3] <= 1'b0; cube[7][7][3] <= 1'b0; 
                         cube[0][7][4] <= 1'b0; cube[1][7][4] <= 1'b0; cube[2][7][4] <= 1'b0; cube[3][7][4] <= 1'b0; cube[4][7][4] <= 1'b1; cube[5][7][4] <= 1'b0; cube[6][7][4] <= 1'b0; cube[7][7][4] <= 1'b0; 
                         cube[0][7][5] <= 1'b0; cube[1][7][5] <= 1'b0; cube[2][7][5] <= 1'b0; cube[3][7][5] <= 1'b0; cube[4][7][5] <= 1'b1; cube[5][7][5] <= 1'b0; cube[6][7][5] <= 1'b0; cube[7][7][5] <= 1'b0;
@@ -628,85 +638,119 @@ module Pong (
 	end
 
     always @(*) begin
-        case (last_change)
-            A_Up: begin
-                if (A_pos_z > 1'b1)
-                    next_A_pos_z = A_pos_z - 1;
-                else
-                    next_A_pos_z = A_pos_z;
-
+        if (robot_A) begin
+            if (A_pos_x < ball_pos_x && A_pos_x < 3'd6)
+                next_A_pos_x = A_pos_x + 1;
+            else if (A_pos_x > 1'b1)
+                next_A_pos_x = A_pos_x - 1;
+            else
                 next_A_pos_x = A_pos_x;
-            end
-            A_Down: begin
-                if (A_pos_z < 3'd6)
-                    next_A_pos_z = A_pos_z + 1;
-                else
-                    next_A_pos_z = A_pos_z;
+            
+            if (A_pos_z < ball_pos_z && A_pos_z < 3'd6)
+                next_A_pos_z = A_pos_z + 1;
+            else if (A_pos_z > 1'b1)
+                next_A_pos_z = A_pos_z - 1;
+            else
+                next_A_pos_z = A_pos_z;
+        end
+        else begin
+            case (last_change)
+                A_Up: begin
+                    if (A_pos_z > 1'b1)
+                        next_A_pos_z = A_pos_z - 1;
+                    else
+                        next_A_pos_z = A_pos_z;
 
-                next_A_pos_x = A_pos_x;
-            end
-            A_Left: begin
-                if (A_pos_x > 1'b1)
-                    next_A_pos_x = A_pos_x - 1;
-                else
                     next_A_pos_x = A_pos_x;
+                end
+                A_Down: begin
+                    if (A_pos_z < 3'd6)
+                        next_A_pos_z = A_pos_z + 1;
+                    else
+                        next_A_pos_z = A_pos_z;
 
-                next_A_pos_z = A_pos_z;
-            end
-            A_Right: begin
-                if (A_pos_x < 3'd6)
-                    next_A_pos_x = A_pos_x + 1;
-                else
                     next_A_pos_x = A_pos_x;
+                end
+                A_Left: begin
+                    if (A_pos_x > 1'b1)
+                        next_A_pos_x = A_pos_x - 1;
+                    else
+                        next_A_pos_x = A_pos_x;
 
-                next_A_pos_z = A_pos_z;
-            end
-            default: begin
-                next_A_pos_x = A_pos_x;
-                next_A_pos_z = A_pos_z;
-            end
-        endcase
+                    next_A_pos_z = A_pos_z;
+                end
+                A_Right: begin
+                    if (A_pos_x < 3'd6)
+                        next_A_pos_x = A_pos_x + 1;
+                    else
+                        next_A_pos_x = A_pos_x;
+
+                    next_A_pos_z = A_pos_z;
+                end
+                default: begin
+                    next_A_pos_x = A_pos_x;
+                    next_A_pos_z = A_pos_z;
+                end
+            endcase
+        end
     end
 
     always @(*) begin
-        case (last_change)
-            B_Up: begin
-                if (B_pos_z > 1'b1)
-                    next_B_pos_z = B_pos_z - 1;
-                else
-                    next_B_pos_z = B_pos_z;
-
+        if (robot_B) begin
+            if (B_pos_x < ball_pos_x && B_pos_x < 3'd6)
+                next_B_pos_x = B_pos_x + 1;
+            else if (B_pos_x > 1'b1)
+                next_B_pos_x = B_pos_x - 1;
+            else
                 next_B_pos_x = B_pos_x;
-            end
-            B_Down: begin
-                if (B_pos_z < 3'd6)
-                    next_B_pos_z = B_pos_z + 1;
-                else
-                    next_B_pos_z = B_pos_z;
+            
+            if (B_pos_z < ball_pos_z && B_pos_z < 3'd6)
+                next_B_pos_z = B_pos_z + 1;
+            else if (B_pos_z > 1'b1)
+                next_B_pos_z = B_pos_z - 1;
+            else
+                next_B_pos_z = B_pos_z;
+        end
+        else begin
+            case (last_change)
+                B_Up: begin
+                    if (B_pos_z > 1'b1)
+                        next_B_pos_z = B_pos_z - 1;
+                    else
+                        next_B_pos_z = B_pos_z;
 
-                next_B_pos_x = B_pos_x;
-            end
-            B_Left: begin
-                if (B_pos_x > 1'b1)
-                    next_B_pos_x = B_pos_x - 1;
-                else
                     next_B_pos_x = B_pos_x;
+                end
+                B_Down: begin
+                    if (B_pos_z < 3'd6)
+                        next_B_pos_z = B_pos_z + 1;
+                    else
+                        next_B_pos_z = B_pos_z;
 
-                next_B_pos_z = B_pos_z;
-            end
-            B_Right: begin
-                if (B_pos_x < 3'd6)
-                    next_B_pos_x = B_pos_x + 1;
-                else
                     next_B_pos_x = B_pos_x;
+                end
+                B_Left: begin
+                    if (B_pos_x > 1'b1)
+                        next_B_pos_x = B_pos_x - 1;
+                    else
+                        next_B_pos_x = B_pos_x;
 
-                next_B_pos_z = B_pos_z;
-            end
-            default: begin
-                next_B_pos_x = B_pos_x;
-                next_B_pos_z = B_pos_z;
-            end
-        endcase
+                    next_B_pos_z = B_pos_z;
+                end
+                B_Right: begin
+                    if (B_pos_x < 3'd6)
+                        next_B_pos_x = B_pos_x + 1;
+                    else
+                        next_B_pos_x = B_pos_x;
+
+                    next_B_pos_z = B_pos_z;
+                end
+                default: begin
+                    next_B_pos_x = B_pos_x;
+                    next_B_pos_z = B_pos_z;
+                end
+            endcase
+        end
     end
 
     reg [2:0] abs_temp_x, abs_temp_z;
@@ -818,21 +862,43 @@ module Pong (
                 end
             end
             ShowScore_1: begin
+                next_A_score = A_score;
+                next_B_score = B_score;
+                next_ball_pos_x = ball_pos_x;
+                next_ball_pos_y = ball_pos_y;
+                next_ball_pos_z = ball_pos_z;
+                next_delta_x = delta_x;
+                next_delta_y = delta_y;
+                next_delta_z = delta_z;
                 Next_state = ShowScore_2;
             end
             ShowScore_2: begin
+                next_A_score = A_score;
+                next_B_score = B_score;
+                next_ball_pos_x = ball_pos_x;
+                next_ball_pos_y = ball_pos_y;
+                next_ball_pos_z = ball_pos_z;
+                next_delta_x = delta_x;
+                next_delta_y = delta_y;
+                next_delta_z = delta_z;
                 Next_state = Play;
             end
-            default: 
+            default:  begin
                 Next_state = Play;
+                next_A_score = A_score;
+                next_B_score = B_score;
+                next_ball_pos_x = ball_pos_x;
+                next_ball_pos_y = ball_pos_y;
+                next_ball_pos_z = ball_pos_z;
+                next_delta_x = delta_x;
+                next_delta_y = delta_y;
+                next_delta_z = delta_z;
+            end
         endcase
     end
 
     always @(*) begin
-        if (A_score == 11 || B_score == 11)
-            Next_Pause = 1;
-        else
-            Next_Pause = (last_change == Space) ? ~Pause : Pause;
+        Next_Pause = (last_change == Space) ? ~Pause : Pause;
     end
 
 endmodule
