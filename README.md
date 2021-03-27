@@ -27,6 +27,9 @@ Pong is a video game developed by Atari in 1972. The game Atari developed was a 
 ![](https://i.imgur.com/xzvYMmV.png)
 (ref: https://github.com/itsharryle/LED_CUBE)
 
+### Led Cube
+![](https://imgur.com/OYxk169.png)
+
 ## Reference
 [Arduino 8x8x8光立方，從無到有一步步教你製作光立方。 - Derek Wu](https://crazymaker.com.tw/arduino-8x8x8-led-cube/) <br>
 [How to make a 8x8x8 LED Cube at Home - Tapendra Mandal ](https://www.youtube.com/watch?v=mN5JWQUfrxY) <br>
