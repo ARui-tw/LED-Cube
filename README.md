@@ -3,6 +3,10 @@ Led cube with 3D pong game and some fancy light show implementation on Xilinx Di
 
 ## Introduction
 Pong is a video game developed by Atari in 1972. The game Atari developed was a sports game that simulates table tennis. The player controls an in-game paddle by moving it vertically across the left or right side of the screen. They can compete against another player controlling a second paddle on the opposing side. We made a pong game in 3D. In this game, instead of just trying to protect one 1D line, players must protect a 2D surface. Also, the paddles will become 2D, so the player will have to move in four directions: up, down, left, and right. But how do we make the game 3D? Since using VR is too difficult and expensive, we came up an idea of using led cube. We plan to let one player stand at one side and the other stand at the opposite side, add they can both play fantastic 3D game in real world. Also, we implement a simple function and let the player can also compete with our machine.
+
+## Demo Video
+[![Demo Video](https://img.youtube.com/vi/S4InMM3k0Zs/0.jpg)](https://www.youtube.com/watch?v=S4InMM3k0Zs)
+
 ## Getting Started
 ### Prerequisites
 * Xilinx Digilent Basys 3 Artix-7 FPGA Board.
